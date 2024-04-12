@@ -1,3 +1,4 @@
+
 version: '3.5'
 services:
     nginx:
@@ -30,7 +31,7 @@ services:
       image: mobidevpublisher/php:8.1
       restart: on-failure
       environment:
-          PHP_ENABLED_EXTENSIONS: "amqp apcu sodium redis zip pdo_pgsql gd gmp"
+          PHP_ENABLED_EXTENSIONS: "amqp apcu sodium redis zip pdo_pgsql gd gmp mysqli"
           PHP_ALLOW_URL_FOPEN: "On"
           PHP_MAX_EXECUTION_TIME: 60
           PHP_MAX_INPUT_TIME: 60
@@ -66,6 +67,38 @@ services:
           - 8084:8080
       networks:
           - local
+    db:
+      image: mysql
+      container_name: db
+      environment:
+        MYSQL_ROOT_PASSWORD: mypassword
+        MYSQL_DATABASE: bohdanova_s_db
+        MYSQL_USER: user
+        MYSQL_PASSWORD: mypassword
+      ports:
+        - "6033:3306"
+      volumes:
+        - dbdata:/var/lib/phplabsql
+      networks:
+        - local
+      build:
+        context: .
+        dockerfile: dockerfile.dockerfile
+
+    phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: pma
+      links:
+        - db
+      environment:
+        PMA_HOST: db
+        PMA_PORT: 3306
+        PMA_ARBITRARY: 1
+      restart: always
+      ports:
+        - 8081:80
+      networks:
+        - local
 
 networks:
     local:
@@ -75,4 +108,3 @@ volumes:
     appdata:
         driver: local
     dbdata:
-        driver: local
